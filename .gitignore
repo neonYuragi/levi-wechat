@@ -28,6 +28,30 @@ docs/public/og/
 # Local data
 .data
 
+# Temporary files and local release notes
+/tmp/
+/temp/
+*.tmp
+*.temp
+.changeset/
+
+# Images downloaded or captured in the repository root
+/*.jpg
+/*.jpeg
+/*.png
+/*.gif
+/*.webp
+/*.bmp
+/*.heic
+/*.avif
+
+# Local editor configuration and temporary files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
 # Claude settings (local only)
 .claude
 

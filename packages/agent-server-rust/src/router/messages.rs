@@ -20,15 +20,48 @@ use crate::tools::wechat_media;
 use crate::sessions::manager::get_session;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListParams {
     #[serde(default = "default_limit")]
     limit: i64,
     #[serde(default)]
     offset: i64,
+    start_time: Option<i64>,
+    end_time: Option<i64>,
+    sender: Option<String>,
 }
 
 fn default_limit() -> i64 {
     50
+}
+
+#[cfg(test)]
+mod list_params_tests {
+    use super::ListParams;
+    use axum::{extract::Query, http::Uri};
+
+    #[test]
+    fn message_query_filters_are_optional_and_use_camel_case() {
+        let defaults = Query::<ListParams>::try_from_uri(&"/api/messages/chat".parse::<Uri>().unwrap()).unwrap().0;
+        assert_eq!(defaults.limit, 50);
+        assert_eq!(defaults.offset, 0);
+        assert_eq!(defaults.start_time, None);
+        assert_eq!(defaults.end_time, None);
+        assert_eq!(defaults.sender, None);
+
+        let uri = "/api/messages/chat?limit=10&offset=2&startTime=0&endTime=200&sender=wxid_alice".parse::<Uri>().unwrap();
+        let params = Query::<ListParams>::try_from_uri(&uri).unwrap().0;
+        assert_eq!(params.limit, 10);
+        assert_eq!(params.offset, 2);
+        assert_eq!(params.start_time, Some(0));
+        assert_eq!(params.end_time, Some(200));
+        assert_eq!(params.sender.as_deref(), Some("wxid_alice"));
+
+        for query in ["startTime=invalid", "endTime=1.5"] {
+            let uri = format!("/api/messages/chat?{query}").parse::<Uri>().unwrap();
+            assert!(Query::<ListParams>::try_from_uri(&uri).is_err());
+        }
+    }
 }
 
 pub async fn list_messages(
@@ -79,6 +112,9 @@ pub async fn list_messages(
         &chat_id,
         params.limit,
         params.offset,
+        params.start_time,
+        params.end_time,
+        params.sender.as_deref(),
     ))
 }
 

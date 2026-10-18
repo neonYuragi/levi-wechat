@@ -176,6 +176,9 @@ export const listMessagesParamsSchema = z.object({
   chatId: z.string().min(1),
   limit: z.number().int().positive().max(200).optional().default(50),
   offset: z.number().int().nonnegative().optional().default(0),
+  startTime: z.number().int().safe().optional(),
+  endTime: z.number().int().safe().optional(),
+  sender: z.string().min(1).optional(),
 });
 
 export const sendParamsSchema = z.object({

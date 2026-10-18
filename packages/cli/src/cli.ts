@@ -1,4 +1,4 @@
-import { Command, Option } from "commander";
+import { Command, InvalidArgumentError, Option } from "commander";
 import { WeChatClient, type WeChatClientOptions } from "@agent-wechat/shared";
 import { createSubscriptionClient, type SubscriptionClientOptions } from "./lib/client.js";
 import { expiredMediaMessage } from "./lib/media-status.js";
@@ -313,14 +313,26 @@ const messagesCmd = program
   .command("messages")
   .description("Message commands");
 
+function parseUnixTimestamp(value: string): number {
+  const timestamp = Number(value);
+  if (!/^-?\d+$/.test(value) || !Number.isSafeInteger(timestamp)) {
+    throw new InvalidArgumentError("Expected an integer Unix timestamp in seconds.");
+  }
+  return timestamp;
+}
+
 messagesCmd
   .command("list <chatId>")
   .description("List messages for a chat")
   .option("-l, --limit <number>", "Maximum number of messages", "50")
   .option("-o, --offset <number>", "Skip first N messages", "0")
+  .option("--start-time <timestamp>", "Sent at or after this Unix timestamp (seconds, inclusive)", parseUnixTimestamp)
+  .option("--end-time <timestamp>", "Sent at or before this Unix timestamp (seconds, inclusive)", parseUnixTimestamp)
+  .option("--sender <wxid>", "Filter by sender wxid (exact match)")
   .option("-j, --json", "Output as JSON")
   .action(async (chatId: string, opts) => {
-    await cmdMessages(getClient(), chatId, parseInt(opts.limit, 10), parseInt(opts.offset, 10), opts.json ?? false);
+    await cmdMessages(getClient(), chatId, parseInt(opts.limit, 10), parseInt(opts.offset, 10), opts.json ?? false,
+      opts.startTime, opts.endTime, opts.sender);
   });
 
 messagesCmd
@@ -680,8 +692,11 @@ function getMsgTypeLabel(rawType: number): string {
   return baseLabel;
 }
 
-async function cmdMessages(client: WeChatClient, chatId: string, limit: number = 50, offset: number = 0, json: boolean = false) {
-  const messages = await client.listMessages(chatId, limit, offset);
+async function cmdMessages(
+  client: WeChatClient, chatId: string, limit: number = 50, offset: number = 0, json: boolean = false,
+  startTime?: number, endTime?: number, sender?: string,
+) {
+  const messages = await client.listMessages(chatId, limit, offset, startTime, endTime, sender);
 
   if (json) {
     console.log(JSON.stringify(messages, null, 2));

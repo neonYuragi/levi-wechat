@@ -115,6 +115,12 @@ export interface ListMessagesParams {
   chatId: string;
   limit?: number;
   offset?: number;
+  /** Inclusive lower bound, in Unix seconds. */
+  startTime?: number;
+  /** Inclusive upper bound, in Unix seconds. */
+  endTime?: number;
+  /** Sender wxid (exact match). */
+  sender?: string;
 }
 
 // Note: SendResult kept handwritten (has messageId field not yet in Rust)

@@ -83,6 +83,15 @@ Options: `--limit <n>`, `--offset <n>`, `--json`
 | `wx messages send <chatId>` | Send a message |
 | `wx messages media <chatId> <localId>` | Download a media attachment |
 
+List options: `--limit <n>`, `--offset <n>`, `--json`, `--start-time <timestamp>`,
+`--end-time <timestamp>`, `--sender <wxid>`. All filters are optional and may be
+combined. Times are Unix seconds with inclusive bounds; sender matches the exact
+wxid. Filtering happens before pagination.
+
+```bash
+wx messages list <chatId> --start-time 1700000000 --end-time 1700003600 --sender wxid_alice
+```
+
 Send options:
 - `--text "message"` — send text
 - `--image photo.jpg` — send an image

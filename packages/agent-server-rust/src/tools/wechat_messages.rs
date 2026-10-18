@@ -221,12 +221,16 @@ pub fn find_message_db<'a>(
 ///
 /// Messages may be spread across message_0.db, message_1.db, etc.
 /// Each chat's messages are in a `Msg_{MD5(username)}` table.
+/// Optional time bounds are inclusive Unix timestamps in seconds; sender is a wxid.
 pub fn list_messages(
     account_dir: &str,
     keys: &HashMap<String, String>,
     chat_id: &str,
     limit: i64,
     offset: i64,
+    start_time: Option<i64>,
+    end_time: Option<i64>,
+    sender: Option<&str>,
 ) -> Vec<Message> {
     let table_name = get_msg_table_name(chat_id);
     let is_group = chat_id.contains("@chatroom");
@@ -241,18 +245,7 @@ pub fn list_messages(
     let rows = query_wechat_db(
         &db_path,
         key,
-        &format!(
-            "SELECT m.local_id, m.server_id, m.local_type, m.create_time,
-                    hex(m.message_content) as hex_content,
-                    m.WCDB_CT_message_content as is_compressed,
-                    hex(m.source) as hex_source,
-                    m.WCDB_CT_source as source_compressed,
-                    n.user_name as sender_name
-             FROM \"{table_name}\" m
-             LEFT JOIN Name2Id n ON m.real_sender_id = n.rowid
-             ORDER BY m.create_time DESC
-             LIMIT {limit} OFFSET {offset};"
-        ),
+        &message_list_query(&table_name, limit, offset, start_time, end_time, sender),
     );
 
     // Resolve sender display names from contact.db
@@ -405,9 +398,87 @@ pub fn list_messages(
         .collect()
 }
 
+fn message_list_query(
+    table_name: &str,
+    limit: i64,
+    offset: i64,
+    start_time: Option<i64>,
+    end_time: Option<i64>,
+    sender: Option<&str>,
+) -> String {
+    let mut filters = Vec::new();
+    if let Some(start_time) = start_time {
+        filters.push(format!("m.create_time >= {start_time}"));
+    }
+    if let Some(end_time) = end_time {
+        filters.push(format!("m.create_time <= {end_time}"));
+    }
+    if let Some(sender) = sender {
+        filters.push(format!("n.user_name = '{}'", sender.replace('\'', "''")));
+    }
+    let where_clause = if filters.is_empty() {
+        String::new()
+    } else {
+        format!("WHERE {}", filters.join(" AND "))
+    };
+
+    format!(
+        "SELECT m.local_id, m.server_id, m.local_type, m.create_time,
+                hex(m.message_content) as hex_content,
+                m.WCDB_CT_message_content as is_compressed,
+                hex(m.source) as hex_source,
+                m.WCDB_CT_source as source_compressed,
+                n.user_name as sender_name
+         FROM \"{table_name}\" m
+         LEFT JOIN Name2Id n ON m.real_sender_id = n.rowid
+         {where_clause}
+         ORDER BY m.create_time DESC
+         LIMIT {limit} OFFSET {offset};"
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn message_filters_are_inclusive_optional_and_applied_before_pagination() {
+        let db = rusqlite::Connection::open_in_memory().unwrap();
+        db.execute_batch(
+            "CREATE TABLE Name2Id (user_name TEXT);
+             INSERT INTO Name2Id (rowid, user_name) VALUES (1, 'wxid_alice'), (2, 'wxid_bob');
+             CREATE TABLE messages (
+                 local_id INTEGER, server_id INTEGER, local_type INTEGER, create_time INTEGER,
+                 message_content BLOB, WCDB_CT_message_content INTEGER,
+                 source BLOB, WCDB_CT_source INTEGER, real_sender_id INTEGER
+             );
+             INSERT INTO messages (local_id, create_time, real_sender_id) VALUES
+                 (1, 0, 1), (2, 100, 1), (3, 150, 2), (4, 200, 1), (5, 300, 2),
+                 (6, 400, NULL);",
+        ).unwrap();
+        let ids = |start, end, sender, limit, offset| {
+            let query = message_list_query("messages", limit, offset, start, end, sender);
+            db.prepare(&query).unwrap()
+                .query_map([], |row| row.get::<_, i64>(0)).unwrap()
+                .collect::<rusqlite::Result<Vec<_>>>().unwrap()
+        };
+
+        assert_eq!(ids(None, None, None, 50, 0), vec![6, 5, 4, 3, 2, 1]);
+        assert_eq!(ids(Some(100), None, None, 50, 0), vec![6, 5, 4, 3, 2]);
+        assert_eq!(ids(None, Some(200), None, 50, 0), vec![4, 3, 2, 1]);
+        assert_eq!(ids(Some(100), Some(200), None, 50, 0), vec![4, 3, 2]);
+        assert_eq!(ids(Some(100), Some(100), None, 50, 0), vec![2]);
+        assert_eq!(ids(None, Some(0), None, 50, 0), vec![1]);
+        assert_eq!(ids(None, None, Some("wxid_alice"), 50, 0), vec![4, 2, 1]);
+        assert_eq!(ids(Some(100), Some(200), Some("wxid_alice"), 50, 0), vec![4, 2]);
+        assert_eq!(ids(Some(100), Some(200), Some("wxid_alice"), 1, 1), vec![2]);
+        assert!(ids(Some(201), Some(200), None, 50, 0).is_empty());
+        assert!(ids(None, None, Some("wxid_missing"), 50, 0).is_empty());
+        assert!(ids(None, None, Some("wxid_alice' OR 1=1 --"), 50, 0).is_empty());
+        db.execute("INSERT INTO Name2Id (rowid, user_name) VALUES (3, ?1)", ["wxid_o'brien"]).unwrap();
+        db.execute("UPDATE messages SET real_sender_id = 3 WHERE local_id = 6", []).unwrap();
+        assert_eq!(ids(None, None, Some("wxid_o'brien"), 50, 0), vec![6]);
+    }
 
     #[test]
     fn clean_content_uses_structured_nested_forward_renderer() {

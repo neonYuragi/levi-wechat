@@ -32,6 +32,10 @@ Authorization: Bearer <token>
 | `GET` | `/api/messages/voice/:jobId` | Check voice-job status |
 | `POST` | `/api/messages/voice/:jobId/cancel` | Request voice-job cancellation |
 
+Message listing accepts optional query parameters `startTime` and `endTime`
+(inclusive Unix timestamps in seconds) and `sender` (an exact wxid). These filters
+are combined and applied before `limit` and `offset` pagination.
+
 For image media, `?quality=full` requires the original-resolution copy,
 `?quality=standard` requires the mid-size copy, and `?quality=thumbnail`
 requests the preview. `?quality=best` returns the best valid local copy.

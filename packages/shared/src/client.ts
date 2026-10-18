@@ -188,9 +188,12 @@ export class WeChatClient {
     chatId: string,
     limit?: number,
     offset?: number,
+    startTime?: number,
+    endTime?: number,
+    sender?: string,
   ): Promise<Message[]> {
     return this.get(
-      `/api/messages/${encodeURIComponent(chatId)}${qs({ limit, offset })}`,
+      `/api/messages/${encodeURIComponent(chatId)}${qs({ limit, offset, startTime, endTime, sender })}`,
     );
   }
 
