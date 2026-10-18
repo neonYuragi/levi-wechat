@@ -1,4 +1,7 @@
 cache/
 *.partial
+wechat-download-*/
+**/__pycache__/
+**/*.pyc
 .DS_Store
 agent-server-rust/target/

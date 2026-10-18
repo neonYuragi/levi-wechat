@@ -8,6 +8,8 @@ function helper({sourceId = 1} = {}) {
   let callbacks, timer, nativeCalls = 0, removals = 0, clears = 0;
   const context = {
     buildId: 'ce28c3471d532eeb1f136482eeb4d0bdfd59c06e',
+    // Offsets are supplied by the Python host; scheduling tests never use them.
+    profile: {arch: 'x64'},
     Process: {
       arch: 'x64', id: 10, getCurrentThreadId: () => 11,
       getModuleByName: () => ({base: {add: offset => offset}}),

@@ -155,6 +155,8 @@ pnpm build:image:arm64       # Build Docker image (Apple Silicon)
 pnpm build:image:amd64       # Build Docker image (Intel)
 ```
 
+For a complete source-build workflow on Windows and WSL2, see the [WSL2 local development guide](./docs/local-development-wsl2.md).
+
 See [AGENTS.md](./AGENTS.md) for contributor guidance and implementation pointers.
 
 ## Ports

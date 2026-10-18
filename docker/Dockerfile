@@ -34,11 +34,19 @@ RUN mkdir -p /output && cp target/${BUILD_MODE}/agent-server /output/agent-serve
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ARG UBUNTU_MIRROR
+
+# Bootstrap HTTPS mirrors before installing Ubuntu's CA certificate package.
+COPY --from=rust:1.93-bookworm /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # ============================================
 # System packages
 # ============================================
-RUN apt-get update && apt-get install -y \
+RUN if [ -n "$UBUNTU_MIRROR" ]; then \
+      sed -i "s|http://archive\.ubuntu\.com/ubuntu|${UBUNTU_MIRROR%/}|g; s|http://security\.ubuntu\.com/ubuntu|${UBUNTU_MIRROR%/}|g" /etc/apt/sources.list; \
+    fi \
+    && printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' > /etc/apt/apt.conf.d/80build-retries \
+    && apt-get -o APT::Update::Error-Mode=any update && apt-get install -y \
     # Display
     xvfb fluxbox x11vnc \
     # Input automation
@@ -102,20 +110,16 @@ RUN mkdir -p /tmp/.X11-unix && chown root:root /tmp/.X11-unix && chmod 1777 /tmp
 
 # ============================================
 # WeChat
-# If docker/wechat.deb exists in the build context, it is used directly.
-# Otherwise the .deb is downloaded at build time (CI path).
-# Run `pnpm download:wechat` to cache locally for faster builds.
+# Select the latest supported build from the same YAML consumed by the tools.
+# Cached packages are reused only after version, arch, SHA256 and BuildID checks.
 # ============================================
 ARG TARGETARCH
+RUN pip3 install 'PyYAML>=6,<7'
+COPY wechat-builds.yaml wechat_builds.py download_wechat.py /opt/
 COPY wechat.de[b] /tmp/
-RUN if [ -f /tmp/wechat.deb ]; then \
-      echo "Installing WeChat from local .deb"; \
-    else \
-      ARCH_SUFFIX=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x86_64") \
-      && echo "Downloading WeChat for ${ARCH_SUFFIX}..." \
-      && curl -L -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_${ARCH_SUFFIX}.deb"; \
-    fi \
+RUN python3 /opt/download_wechat.py --arch "$TARGETARCH" --output /tmp/wechat.deb \
     && (dpkg -i /tmp/wechat.deb || (apt-get update && apt-get install -y -f)) \
+    && python3 /opt/download_wechat.py --arch "$TARGETARCH" --verify-installed \
     && rm -rf /var/lib/apt/lists/* /tmp/wechat.deb
 
 RUN useradd -m -s /bin/bash wechat

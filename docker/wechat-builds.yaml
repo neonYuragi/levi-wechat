@@ -1,0 +1,154 @@
+# Shared WeChat build metadata and tool layouts. Add new builds here.
+# Unknown legacy versions stay null and cannot be selected for installation.
+# Package SHA256 values identify archived vendor packages, not account credentials.
+schema_version: 1
+fallbacks:
+  extract_keys: 5233a112
+download_urls:
+- https://repo.debiancn.org/debiancn/pool/main/w/wechat-stable/wechat_{version}_{arch}.deb
+- https://github.com/trouter-ai/wechat-linux-versions/releases/download/v{version}/WeChatLinux_{version}_{vendor_arch}.deb
+builds:
+  e9f1cd04:
+    version: 4.1.13.23
+    arch: arm64
+    build_id: e9f1cd045de714536a9e739aafa6d8362f317cd0
+    package_sha256: 51784a262c725ef1595dd833f456190e913583dd81c24dd8fe587532bc91c0dc
+    extract_keys:
+      db_xor_mask: b8ec38291bd59c963f4654d8f9d7437e1acc81a6cad6313c7bd0f5e73238d4af
+      db_page_hmac: true
+      image_xor_mask: ed5cfabf2d917d8126870f3102b9207d77227ac7a8127092bdbed6bc40823e77
+    chat_select:
+      ARCH: aarch64
+      SELECT_SESSION: 0x48543d0
+      USERNAME_OFF: 0x130
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0x9fe8c58
+      CTRL_OFF: 0xf8
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x130
+      VEC_KEY_OFF: 0x178
+      VECTOR_LAYOUT: controller_map
+    media_download:
+      arch: arm64
+      alloc: 0x9f9e3a8
+      request: 0x5656864
+      release: 0x467ab84
+      submit: 0x6d85acc
+      context: 0x5ee9a50
+      lookup: 0x6060db0
+      manager: 0xa25a770
+      service: 0xa0685f0
+      model: 0xa1d77c0
+      modelControl: 0xa084618
+      requestControl: 0xa09a2e8
+      raw: 0x5bb4a84
+      destroy: 0x5bb4e20
+      type: 0x5f02500
+      parse: 0x5f02928
+      factory: 0x5f060cc
+      string: 0x449a84c
+  5233a112:
+    version: 4.1.0.16
+    arch: arm64
+    build_id: 5233a112
+    extract_keys:
+      image_xor_mask: 33927e4d6cb29059a74057c9d988394fc4ee2c476aae869415d3ed07f826a174
+    chat_select:
+      ARCH: aarch64
+      SELECT_SESSION: 0x38bd3d0
+      USERNAME_OFF: 0x120
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0x7b3be28
+      CTRL_OFF: 0xd8
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x120
+      VEC_KEY_OFF: 0x158
+  f8713825:
+    version: 4.1.0.16
+    arch: amd64
+    build_id: f8713825
+    extract_keys:
+      image_xor_mask: 60431bbab72c0b5b868c98f9570bbb1d41ec867286d3b4af910b6c5bb8c9ee49
+    chat_select:
+      ARCH: x86_64
+      SELECT_SESSION: 0x3909e50
+      USERNAME_OFF: 0x138
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0x7fc7f50
+      CTRL_OFF: 0x180
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x98
+      VEC_KEY_OFF: 0x168
+      VEC_MAP_OFF: 0xe8
+  3eda8254:
+    version: null
+    arch: arm64
+    build_id: 3eda8254
+    extract_keys:
+      image_xor_mask: ce41c7c149777ded7b5b2f29d277e277dcc8a3dc80f5b623ebe0befe633dd9a8
+    chat_select:
+      ARCH: aarch64
+      SELECT_SESSION: 0x3937ff8
+      USERNAME_OFF: 0x120
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0x7ce8ea8
+      CTRL_OFF: 0xd8
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x120
+      VEC_KEY_OFF: 0x158
+  eba86b80:
+    version: null
+    arch: amd64
+    build_id: eba86b80
+    extract_keys:
+      image_xor_mask: 29c63ae609ae3c9826a786367d9a4c3a7146d19c2fcbfac10f6ed2aa2a4034f4
+    chat_select:
+      ARCH: x86_64
+      SELECT_SESSION: 0x3988e60
+      USERNAME_OFF: 0x120
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0x8197d10
+      CTRL_OFF: 0x180
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x98
+      VEC_KEY_OFF: 0x168
+      VEC_MAP_OFF: 0xe8
+  ce28c347:
+    version: 4.1.13.23
+    arch: amd64
+    build_id: ce28c3471d532eeb1f136482eeb4d0bdfd59c06e
+    package_sha256: b7d0f8d53e9f648bc2c77a6096a04100d008f2d9f0d3988a2a4859b5992aca0a
+    extract_keys:
+      db_xor_mask: b8ec38291bd59c963f4654d8f9d7437e1acc81a6cad6313c7bd0f5e73238d4af
+      db_page_hmac: true
+      image_xor_mask: 4e9379223c6eeed2ae11ed50510d0e153929e23541a7288ac021a10e6d4b4655
+    chat_select:
+      ARCH: x86_64
+      SELECT_SESSION: 0x48ae510
+      USERNAME_OFF: 0x130
+      ELEM_SIZE: 16
+      MANAGER_VT_OFF: 0xa6a7d78
+      CTRL_OFF: 0x1a8
+      CUR_SESS_OFF: 0x40
+      CUR_SESS_UNAME_OFF: 0x98
+      VEC_KEY_OFF: 0x178
+      VEC_MAP_OFF: 0xf8
+    media_download:
+      arch: x64
+      alloc: 0xa66dda0
+      request: 0x5746080
+      release: 0x4b86ae0
+      submit: 0x7068190
+      context: 0x603c4e0
+      lookup: 0x61d1b60
+      manager: 0xa91b150
+      service: 0xa728ef0
+      model: 0xa8981a0
+      modelControl: 0xa744f18
+      requestControl: 0xa75abe8
+      raw: 0x5cd6fa0
+      destroy: 0x5cd7380
+      type: 0x6055d00
+      parse: 0x60561b0
+      factory: 0x6059a60
+      string: 0x450c6a0

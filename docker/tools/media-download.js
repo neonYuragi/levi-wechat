@@ -1,24 +1,7 @@
 'use strict';
 // Full BuildID is checked by the host before this script is loaded.
-const profiles = {
-  ce28c3471d532eeb1f136482eeb4d0bdfd59c06e: {
-    arch: 'x64', alloc: 0xa66dda0, request: 0x5746080, release: 0x4b86ae0,
-    submit: 0x7068190, context: 0x603c4e0, lookup: 0x61d1b60,
-    manager: 0xa91b150, service: 0xa728ef0, model: 0xa8981a0,
-    modelControl: 0xa744f18, requestControl: 0xa75abe8,
-    raw: 0x5cd6fa0, destroy: 0x5cd7380, type: 0x6055d00,
-    parse: 0x60561b0, factory: 0x6059a60, string: 0x450c6a0,
-  },
-  e9f1cd045de714536a9e739aafa6d8362f317cd0: {
-    arch: 'arm64', alloc: 0x9f9e3a8, request: 0x5656864, release: 0x467ab84,
-    submit: 0x6d85acc, context: 0x5ee9a50, lookup: 0x6060db0,
-    manager: 0xa25a770, service: 0xa0685f0, model: 0xa1d77c0,
-    modelControl: 0xa084618, requestControl: 0xa09a2e8,
-    raw: 0x5bb4a84, destroy: 0x5bb4e20, type: 0x5f02500,
-    parse: 0x5f02928, factory: 0x5f060cc, string: 0x449a84c,
-  },
-};
-const p = profiles[buildId];
+// The host supplies the YAML profile after checking the full BuildID.
+const p = profile;
 if (!p || Process.arch !== p.arch) throw Error('Unsupported build');
 const base = Process.getModuleByName('wechat').base;
 const nf = (off, ret, args) => new NativeFunction(base.add(off), ret, args, { traps: 'none' });

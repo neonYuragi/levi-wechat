@@ -7,10 +7,12 @@ import re
 import subprocess
 import sys
 
-BUILDS = {
-    'ce28c3471d532eeb1f136482eeb4d0bdfd59c06e',
-    'e9f1cd045de714536a9e739aafa6d8362f317cd0',
-}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from wechat_builds import media_profiles
+
+BUILD_PROFILES = media_profiles()
+BUILDS = set(BUILD_PROFILES)
+
 MAX_INPUT = 2 * 1024 * 1024
 
 
@@ -91,7 +93,9 @@ def serve(cleanup):
                 session = frida.attach(pid)
                 cleanup.callback(lambda: close_attachment(session, script))
                 source = Path(__file__).with_suffix('.js').read_text()
-                script = session.create_script('const buildId=' + json.dumps(build) + ';\n' + source)
+                script = session.create_script(
+                    'const buildId=' + json.dumps(build) + ';\n'
+                    + 'const profile=' + json.dumps(BUILD_PROFILES[build]) + ';\n' + source)
                 script.load()
                 identity = current
             if session.is_detached:

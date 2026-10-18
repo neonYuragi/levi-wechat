@@ -27,81 +27,16 @@ import tempfile
 import fcntl
 from contextlib import contextmanager
 
+from pathlib import Path
+
+# Also works when tools are loaded by file path in host-side tests.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from wechat_builds import tool_profiles
+
 # ── Per-build constants ──────────────────────────────────────────────────────
 # Keyed by first 8 hex chars of ELF BuildID (same pattern as extract-keys.py).
 
-BUILD_PROFILES = {
-    "e9f1cd04": {
-        "ARCH": "aarch64", "SELECT_SESSION": 0x48543d0,
-        "USERNAME_OFF": 0x130, "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0x9fe8c58, "CTRL_OFF": 0xf8,
-        "CUR_SESS_OFF": 0x40, "CUR_SESS_UNAME_OFF": 0x130,
-        "VEC_KEY_OFF": 0x178, "VECTOR_LAYOUT": "controller_map",
-    },
-    # WeChat Linux v4.1.13.23 x86_64 (BuildID: ce28c3471d532eeb1f136482eeb4d0bdfd59c06e)
-    "ce28c347": {
-        "ARCH": "x86_64",
-        "SELECT_SESSION": 0x48ae510,
-        "USERNAME_OFF": 0x130,
-        "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0xa6a7d78,
-        "CTRL_OFF": 0x1a8,
-        "CUR_SESS_OFF": 0x40,
-        "CUR_SESS_UNAME_OFF": 0x98,
-        "VEC_KEY_OFF": 0x178,
-        "VEC_MAP_OFF": 0xf8,
-    },
-    # WeChat Linux v4.1.0.16 aarch64 (BuildID: 5233a112...)
-    "5233a112": {
-        "ARCH": "aarch64",
-        "SELECT_SESSION": 0x38bd3d0,
-        "USERNAME_OFF": 0x120,
-        "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0x7b3be28,
-        "CTRL_OFF": 0xd8,
-        "CUR_SESS_OFF": 0x40,
-        "CUR_SESS_UNAME_OFF": 0x120,
-        "VEC_KEY_OFF": 0x158,
-    },
-    # WeChat Linux v4.1.0.16 x86_64 (BuildID: f8713825...)
-    "f8713825": {
-        "ARCH": "x86_64",
-        "SELECT_SESSION": 0x3909e50,
-        "USERNAME_OFF": 0x138,
-        "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0x7fc7f50,
-        "CTRL_OFF": 0x180,
-        "CUR_SESS_OFF": 0x40,
-        "CUR_SESS_UNAME_OFF": 0x98,
-        "VEC_KEY_OFF": 0x168,
-        "VEC_MAP_OFF": 0xe8,
-    },
-    # WeChat Linux 4.x aarch64 (BuildID: 3eda8254...)
-    "3eda8254": {
-        "ARCH": "aarch64",
-        "SELECT_SESSION": 0x3937ff8,
-        "USERNAME_OFF": 0x120,
-        "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0x7ce8ea8,
-        "CTRL_OFF": 0xd8,
-        "CUR_SESS_OFF": 0x40,
-        "CUR_SESS_UNAME_OFF": 0x120,
-        "VEC_KEY_OFF": 0x158,
-    },
-    # WeChat Linux 4.x x86_64 (BuildID: eba86b80...)
-    "eba86b80": {
-        "ARCH": "x86_64",
-        "SELECT_SESSION": 0x3988e60,
-        "USERNAME_OFF": 0x120,
-        "ELEM_SIZE": 16,
-        "MANAGER_VT_OFF": 0x8197d10,
-        "CTRL_OFF": 0x180,
-        "CUR_SESS_OFF": 0x40,
-        "CUR_SESS_UNAME_OFF": 0x98,
-        "VEC_KEY_OFF": 0x168,
-        "VEC_MAP_OFF": 0xe8,
-    },
-}
+BUILD_PROFILES = tool_profiles("chat_select")
 
 FRIDA_BIN = shutil.which("frida") or "/usr/local/bin/frida"
 

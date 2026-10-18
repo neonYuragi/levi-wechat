@@ -54,11 +54,23 @@ cleanup_build_context() {
 build_arch() {
   local platform="$1"
   local tag="$2"
+  local extra_args=()
+
+  if [ "$NO_CACHE" -eq 1 ]; then
+    extra_args+=(--no-cache)
+  fi
+  if [ -n "${UBUNTU_MIRROR:-}" ]; then
+    extra_args+=(--build-arg "UBUNTU_MIRROR=$UBUNTU_MIRROR")
+  fi
 
   echo "==> Building ${tag} (${platform})"
-  echo "    WeChat .deb will be downloaded inside Docker build"
+  if [ -f "$DOCKER_DIR/wechat.deb" ]; then
+    echo "    Using local docker/wechat.deb"
+  else
+    echo "    WeChat .deb will be downloaded inside Docker build"
+  fi
   docker buildx build \
-    ${NO_CACHE:+--no-cache} \
+    "${extra_args[@]}" \
     --platform "$platform" \
     --build-arg BUILD_MODE="$BUILD_MODE" \
     -t "$tag" \

@@ -20,6 +20,12 @@ import struct
 import hashlib
 import hmac
 
+from pathlib import Path
+
+# Also works when tools are loaded by file path in host-side tests.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from wechat_builds import fallback_profile, tool_profiles
+
 # ── DB access pattern ─────────────
 CIPHER_CTX_PATTERN = bytes([
     0x20, 0x00, 0x00, 0x00,  # reserve_sz = 32
@@ -224,63 +230,10 @@ def matches_sqlcipher4_page(key, page):
     return hmac.compare_digest(digest, page[4032:4096])
 
 
-# ── Image access setup ────────────────────────────────────────────────────────
+# ── Build profiles ────────────────────────────────────────────────────────
 # Per-build constants: keyed by BuildID prefix (first 8 hex chars).
 
-BUILD_PROFILES = {
-    # WeChat Linux v4.1.13.23 ARM64 (BuildID: e9f1cd045de714536a9e739aafa6d8362f317cd0)
-    "e9f1cd04": {
-        "db_xor_mask": bytes.fromhex(
-            "b8ec38291bd59c963f4654d8f9d7437e"
-            "1acc81a6cad6313c7bd0f5e73238d4af"
-        ),
-        "db_page_hmac": True,
-        "image_xor_mask": bytes.fromhex(
-            "ed5cfabf2d917d8126870f3102b9207d"
-            "77227ac7a8127092bdbed6bc40823e77"
-        ),
-    },
-    # WeChat Linux v4.1.0.16 aarch64 (BuildID: 5233a112...)
-    "5233a112": {
-        "image_xor_mask": bytes.fromhex(
-            "33927e4d6cb29059a74057c9d988394f"
-            "c4ee2c476aae869415d3ed07f826a174"
-        ),
-    },
-    # WeChat Linux v4.1.0.16 x86_64 (BuildID: f8713825...)
-    "f8713825": {
-        "image_xor_mask": bytes.fromhex(
-            "60431bbab72c0b5b868c98f9570bbb1d"
-            "41ec867286d3b4af910b6c5bb8c9ee49"
-        ),
-    },
-    # WeChat Linux 4.x aarch64 (BuildID: 3eda8254...)
-    "3eda8254": {
-        "image_xor_mask": bytes.fromhex(
-            "ce41c7c149777ded7b5b2f29d277e277"
-            "dcc8a3dc80f5b623ebe0befe633dd9a8"
-        ),
-    },
-    # WeChat Linux 4.x x86_64 (BuildID: eba86b80...)
-    "eba86b80": {
-        "image_xor_mask": bytes.fromhex(
-            "29c63ae609ae3c9826a786367d9a4c3a"
-            "7146d19c2fcbfac10f6ed2aa2a4034f4"
-        ),
-    },
-    # WeChat Linux v4.1.13.23 x86_64 (BuildID: ce28c3471d532eeb1f136482eeb4d0bdfd59c06e)
-    "ce28c347": {
-        "db_xor_mask": bytes.fromhex(
-            "b8ec38291bd59c963f4654d8f9d7437e"
-            "1acc81a6cad6313c7bd0f5e73238d4af"
-        ),
-        "db_page_hmac": True,
-        "image_xor_mask": bytes.fromhex(
-            "4e9379223c6eeed2ae11ed50510d0e15"
-            "3929e23541a7288ac021a10e6d4b4655"
-        ),
-    },
-}
+BUILD_PROFILES = tool_profiles("extract_keys")
 
 
 def get_build_id(pid):
@@ -313,9 +266,8 @@ def get_build_profile(pid):
             print(f"Build: {build_id[:16]}... ({prefix})")
             return BUILD_PROFILES[prefix]
         print(f"WARNING: Unknown BuildID {build_id}. Image key extraction may fail.")
-    # Fall back to first profile (aarch64)
-    # Preserve the historical fallback regardless of profile insertion order.
-    return BUILD_PROFILES["5233a112"]
+    # Preserve the configured historical fallback for unknown builds.
+    return fallback_profile("extract_keys", BUILD_PROFILES)
 
 
 def extract_image_aes_key(pid, profile):

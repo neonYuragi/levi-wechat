@@ -10,6 +10,7 @@ packages/*/src/**/*.d.ts.map
 # Docker build artifacts
 docker/wechat.deb
 docker/*.partial
+docker/wechat-download-*/
 docker/cache/
 docker/agent-server/
 docker/shared/

@@ -66,6 +66,8 @@ docker run -d \
   -v "$CONTAINER_NAME-data:/data" \
   -v "$CONTAINER_NAME-wechat-home:/home/wechat" \
   -v "$DOCKER_TOOLS:/opt/tools" \
+  -v "$MONOREPO_ROOT/docker/wechat_builds.py:/opt/wechat_builds.py:ro" \
+  -v "$MONOREPO_ROOT/docker/wechat-builds.yaml:/opt/wechat-builds.yaml:ro" \
   -v "$TOKEN_PATH:/data/auth-token:ro" \
   "$IMAGE"
 
